@@ -1,17 +1,23 @@
 /**
- * Carousel functionality
+ * Carousel functionality - buttons-only, seamless infinite loop.
  *
  * Get DOM Elements
  * Perform size calculations
- * Next Slide Listener
- * Previous Slide Listener
+ * Position on the real slide set (skip past the leading clone block)
+ * Next/Previous Slide Listeners
+ * Snap invisibly onto the real slide set whenever a clone is reached
+ *
+ * The DOM (built by carouselSlide.js) is laid out as:
+ *   [clones of all projects] [real projects] [clones of all projects]
+ * Buttons always move exactly one slide at a time, so a boundary is only ever crossed by one
+ * slide - meaning we can always tell we've landed on a clone and snap back to its real twin.
  */
 
-// Carousel parent.
-const carouselContainer = document.querySelector(".carousel-container");
-
-// Get carousel slides array.
+// Get carousel slides array. Includes the leading/trailing clone blocks used for the infinite-loop illusion.
 const slides = Array.from(document.querySelectorAll(".slide"));
+
+// Number of real (non-clone) slides - also the size of each clone block and the DOM index where the real block starts.
+const realCount = document.querySelectorAll(".slide:not(.clone)").length;
 
 // Get the elem containing ALL carousel items.
 const carouselSlides = document.querySelector(".carousel-slides");
@@ -20,67 +26,82 @@ const carouselSlides = document.querySelector(".carousel-slides");
 const btnNext = document.querySelector(".ctrl-next");
 const btnPrev = document.querySelector(".ctrl-prev");
 
-// Event handler on-page load/resize. Updates carousel values.
-function getValues() {
-  let slideWidth = slides[0].offsetWidth;
-  let slidesGap = parseInt(window.getComputedStyle(carouselSlides).gap, 10);
-  let slideInterval = slideWidth + slidesGap;
-  carouselSlides.scrollTo({ left: 0 });
-
-  return slideInterval;
+// Recalculates slide width + gap on load/resize.
+function getSlideInterval() {
+  const slideWidth = slides[0].offsetWidth;
+  const slidesGap = parseInt(window.getComputedStyle(carouselSlides).gap, 10);
+  return slideWidth + slidesGap;
 }
 
-// Get new values.
-let slideInterval = getValues();
-window.addEventListener("resize", () => (slideInterval = getValues()));
+let slideInterval = getSlideInterval();
 
-// Scrolls carousel
-function scrollToSlide(index) {
-  const scrollPosition = slideInterval * index;
+// Tracks the DOM index (into `slides`, clones included) currently scrolled to.
+let currentIndex = realCount;
 
+// Scrolls carousel to a given DOM index. smooth = false jumps instantly (used for the initial
+// position and for the invisible clone-to-real snap, where no animation should be seen).
+function scrollToSlide(index, smooth = true) {
   carouselSlides.scrollTo({
-    left: scrollPosition,
-    behavior: "smooth",
+    left: slideInterval * index,
+    behavior: smooth ? "smooth" : "auto",
   });
 }
 
-let currentSlide = 0;
-// Go to next slide
-btnNext.addEventListener("click", () => {
-  const containerRightPos =
-    carouselSlides.getBoundingClientRect().left +
-    carouselSlides.getBoundingClientRect().width;
-  const lastSlideRightPos =
-    slides[slides.length - 1].getBoundingClientRect().left +
-    slides[slides.length - 1].getBoundingClientRect().width;
+// Position on the first real slide (skip past the leading clone block) with no visible scroll animation.
+scrollToSlide(currentIndex, false);
 
-  // With a 10px buffer for large mobile screens.
-  const noMoreSlides = containerRightPos > lastSlideRightPos - 10;
+// On resize only the pixel width changes - re-anchor to the same logical slide, don't reset to slide 0.
+window.addEventListener("resize", () => {
+  slideInterval = getSlideInterval();
+  scrollToSlide(currentIndex, false);
+});
 
-  // Determine current slide if user has scrolled based on the scrolled position of the carousel. Added the 1 as a buffer bc on desktop devices it scrolls shy of the slideInterval length for some reason.
-  currentSlide = Math.floor((carouselSlides.scrollLeft + 1) / slideInterval);
+// Recalculates currentIndex from the actual scroll position - keeps state in sync with manual
+// swipe/trackpad scrolling on the container, not just button clicks.
+function syncIndexFromScroll() {
+  currentIndex = Math.round(carouselSlides.scrollLeft / slideInterval);
+}
 
-  // This condition is valid only if one slide is visible at a time
-  if (currentSlide < slides.length - 1) {
-    if (noMoreSlides) {
-      // Case where carousel shows more than one slides at a time.
-      currentSlide = 0;
-    } else {
-      currentSlide++;
-    }
-  } else {
-    currentSlide = 0;
+// Runs once any scroll (button click OR manual swipe/trackpad drag) settles. If it landed in a
+// clone block, shifts the raw scroll position by exactly one clone-block-width - rather than
+// rounding to the nearest slide and re-targeting its edge - so a mid-slide swipe position is
+// preserved instead of being snapped to a slide boundary. Finally re-syncs currentIndex from the
+// (possibly just-shifted) position, since a swipe never goes through the button handlers.
+function settleScrollPosition() {
+  const cloneBlockWidth = realCount * slideInterval;
+  const rawScrollLeft = carouselSlides.scrollLeft;
+
+  if (rawScrollLeft >= cloneBlockWidth * 2) {
+    // Past the trailing clone block's start -> shift back onto the matching real position.
+    carouselSlides.scrollTo({ left: rawScrollLeft - cloneBlockWidth, behavior: "auto" });
+  } else if (rawScrollLeft < cloneBlockWidth) {
+    // Before the real block's start -> shift forward onto the matching real position.
+    carouselSlides.scrollTo({ left: rawScrollLeft + cloneBlockWidth, behavior: "auto" });
   }
-  scrollToSlide(currentSlide);
+
+  syncIndexFromScroll();
+}
+
+btnNext.addEventListener("click", () => {
+  syncIndexFromScroll();
+  currentIndex++;
+  scrollToSlide(currentIndex);
 });
 
 btnPrev.addEventListener("click", () => {
-  currentSlide = Math.ceil(carouselSlides.scrollLeft / slideInterval);
-
-  if (currentSlide === 0) {
-    currentSlide = slides.length - 1;
-  } else {
-    currentSlide--;
-  }
-  scrollToSlide(currentSlide);
+  syncIndexFromScroll();
+  currentIndex--;
+  scrollToSlide(currentIndex);
 });
+
+// Settle - and snap off a clone if needed - once any scroll (button or swipe) comes to rest.
+if ("onscrollend" in window) {
+  carouselSlides.addEventListener("scrollend", settleScrollPosition);
+} else {
+  // Fallback for browsers without the `scrollend` event - approximates "the scroll has settled".
+  let settleTimeout;
+  carouselSlides.addEventListener("scroll", () => {
+    clearTimeout(settleTimeout);
+    settleTimeout = setTimeout(settleScrollPosition, 150);
+  });
+}

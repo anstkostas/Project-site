@@ -8,7 +8,7 @@
 import data from "./data.mjs";
 import technologiesColorPalette from "./technologiesColorPalette.mjs";
 
-// Create card instances bases on the data.mjs data obj, and place on the DOM.
+// Create card instances based on the data.mjs's data obj, and place at the DOM.
 class Slide {
   constructor(site) {
     this.site = site;
@@ -22,10 +22,13 @@ class Slide {
     return element;
   }
 
-  // Main class method
-  createCard() {
+  // Main class method. isClone marks the duplicated cards used for the infinite-scroll illusion
+  // (see carousel.js) - they're hidden from assistive tech and excluded from tab order.
+  createCard(isClone = false) {
     // null parent arg bc this will be declared when the card instance is created & added manualy at the DOM.
-    const card = this.createElement("div", null, "card", "slide");
+    const cardClasses = isClone ? ["card", "slide", "clone"] : ["card", "slide"];
+    const card = this.createElement("div", null, ...cardClasses);
+    if (isClone) card.setAttribute("aria-hidden", "true");
 
     const image = this.createElement("img", card, "card-img");
 
@@ -74,13 +77,7 @@ class Slide {
       aViewCodeTag.style.opacity = 0.4;
     }
 
-    const iconGithub = this.createElement(
-      "i",
-      aViewCodeTag,
-      "card-icon",
-      "fa-brands",
-      "fa-github"
-    );
+    this.createElement("i", aViewCodeTag, "card-icon", "fa-brands", "fa-github");
 
     const spanGithub = this.createElement("span", aViewCodeTag);
     spanGithub.textContent = "View code";
@@ -95,18 +92,15 @@ class Slide {
     aViewSiteTag.target = "_blank";
     aViewSiteTag.rel = "noopener noreferrer";
 
-    const iconWebsite = this.createElement(
-      "i",
-      aViewSiteTag,
-      "card-icon",
-      "fa-solid",
-      "fa-globe"
-    );
+    this.createElement("i", aViewSiteTag, "card-icon", "fa-solid", "fa-globe");
 
     const spanWebsite = this.createElement("span", aViewSiteTag);
     spanWebsite.textContent = "See it in action";
 
     this.cardTechnologies(cardInfoLinks);
+
+    // Clone links shouldn't be reachable by keyboard - they exist only for the infinite-scroll illusion.
+    if (isClone) card.querySelectorAll("a").forEach((a) => a.setAttribute("tabindex", "-1"));
 
     return card;
 
@@ -181,15 +175,15 @@ class Slide {
     sortedTechnologies.forEach((technology) => {
       const item = this.createElement("li", technologiesList, "technology");
 
-      // The dot before each language.
-      const icon = this.createElement("i", item, "fa-solid", "fa-circle");
-      // From the Object.entries returned array, technology is an item, and technology[0] is the first item of the item, in this case the key of the [ key, value ] pairs, which happens to be a key of the technologiesColorPalette obj as well.
-      icon.style.color =
+      // Get this technology's palette color once - used for both the dot icon and the wrapper
+      // gradient below. From the Object.entries returned array, technology[0] is the key of the
+      // [ key, value ] pair, which happens to be a key of the technologiesColorPalette obj as well.
+      const languageColor =
         technologiesColorPalette[technology[0].toLowerCase()] || "#3e4b41"; // Add fallback value if some typo occurs.
 
-      // Get corresponding color for this technology based on the technologiesColorPalette obj(data.mjs).
-      const pLanguageColor =
-        technologiesColorPalette[technology[0].toLowerCase()] || "#3e4b41";
+      // The dot before each language.
+      const icon = this.createElement("i", item, "fa-solid", "fa-circle");
+      icon.style.color = languageColor;
 
       // Update value based on language percentage(keep only the number).
       thisPercentage = parseFloat(technology[1], 10);
@@ -199,7 +193,7 @@ class Slide {
           : thisPercentage + lastPercentage;
 
       // Update bg string prop with this language's respective color(i.e. "#ffffff 10% 40%, "), its starting point and its end point on the circle.
-      wrapperBgString += `${pLanguageColor} ${lastPercentage}% ${thisPercentage}%, `;
+      wrapperBgString += `${languageColor} ${lastPercentage}% ${thisPercentage}%, `;
 
       //   Update value for the next loop.
       lastPercentage = thisPercentage;
@@ -242,11 +236,23 @@ class Slide {
   }
 }
 
-// Create slides(instances of the Slide class) for each obj item of data(data.mjs) array.
-data.forEach((project, index) => {
+// Build the DOM slide list as [clones of all projects] [real projects] [clones of all projects].
+// A full clone block on each side means the "next"/"prev" buttons in carousel.js always find another
+// slide immediately past a boundary, so navigation can snap invisibly onto the matching real slide.
+const carouselSlidesContainer = document.querySelector(".carousel-slides");
+
+// Builds a card for a project and appends it to the carousel. isClone marks duplicated cards
+// used for the infinite-scroll illusion (see carousel.js).
+function appendSlideCard(project, isClone = false) {
   const slide = new Slide(project);
-  // For each slide use the createCard() method to create the card(main-only) item of the slide.
-  const card = slide.createCard();
-  // if (index === 0) card.classList.add("inDevelopment"); // Removed the Development banner.
-  document.querySelector(".carousel-slides").appendChild(card);
-});
+  carouselSlidesContainer.appendChild(slide.createCard(isClone));
+}
+
+// Leading clones - mirror the real set so scrolling back past the first real slide shows the last one.
+data.forEach((project) => appendSlideCard(project, true));
+
+// Real slides for each obj item of data(data.mjs) array.
+data.forEach((project) => appendSlideCard(project));
+
+// Trailing clones - mirror the real set so scrolling past the last real slide shows the first one.
+data.forEach((project) => appendSlideCard(project, true));
