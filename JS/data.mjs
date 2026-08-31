@@ -11,8 +11,8 @@ const data = [
       }
     },
     header: "Furniro E-commerce",
-    website: "https://kostas23github.github.io/Furniro/",
-    code: "https://github.com/kostas23Github/Furniro",
+    website: "https://anstkostas.github.io/Furniro/",
+    code: "https://github.com/anstkostas/Furniro",
     technologies: {
       React: "98%",
     },
@@ -29,8 +29,8 @@ const data = [
       }
     },
     header: "Mind Alliance",
-    website: "https://kostas23github.github.io/mindful-aliance/",
-    code: "https://github.com/kostas23Github/mindful-aliance",
+    website: "https://anstkostas.github.io/mindful-aliance/",
+    code: "https://github.com/anstkostas/mindful-aliance",
     technologies: {
       HTML: "32%",
       CSS: "33%",
@@ -49,8 +49,8 @@ const data = [
       }
     },
     header: "User Login - Dashboard",
-    website: "https://kostas23github.github.io/National-Intelligence-Council/",
-    code: "https://github.com/kostas23Github/National-Intelligence-Council",
+    website: "https://anstkostas.github.io/National-Intelligence-Council/",
+    code: "https://github.com/anstkostas/National-Intelligence-Council",
     technologies: {
       HTML: "40%",
       CSS: "40%",
@@ -69,8 +69,8 @@ const data = [
       }
     },
     header: "Calculator",
-    website: "https://kostas23github.github.io/whitecalculator/",
-    code: "https://github.com/kostas23Github/whitecalculator",
+    website: "https://anstkostas.github.io/whitecalculator/",
+    code: "https://github.com/anstkostas/whitecalculator",
     technologies: {
       HTML: "18%",
       CSS: "18%",
@@ -107,8 +107,8 @@ const data = [
       }
     },
     header: "Home Page",
-    website: "https://kostas23github.github.io/koutsouradis/",
-    code: "https://github.com/kostas23Github/koutsouradis",
+    website: "https://anstkostas.github.io/koutsouradis/",
+    code: "https://github.com/anstkostas/koutsouradis",
     technologies: {
       HTML: "40%",
       CSS: "53%",
@@ -145,8 +145,8 @@ const data = [
       }
     },
     header: "Pet appointments list",
-    website: "https://kostas23github.github.io/linkedin-full-react/",
-    code: "https://github.com/kostas23Github/linkedin-full-react",
+    website: "https://anstkostas.github.io/linkedin-full-react/",
+    code: "https://github.com/anstkostas/linkedin-full-react",
     technologies: {
       HTML: "8%",
       CSS: "17%",
@@ -165,8 +165,8 @@ const data = [
       }
     },
     header: "Netflix Demo",
-    website: "https://kostas23github.github.io/mymdb2/",
-    code: "https://github.com/kostas23Github/mymdb2",
+    website: "https://anstkostas.github.io/mymdb2/",
+    code: "https://github.com/anstkostas/mymdb2",
     technologies: {
       HTML: "7%",
       CSS: "9%",
@@ -185,8 +185,8 @@ const data = [
       }
     },
     header: "Hover/Swipe",
-    website: "https://kostas23github.github.io/hover-swipe-effect/",
-    code: "https://github.com/kostas23Github/hover-swipe-effect",
+    website: "https://anstkostas.github.io/hover-swipe-effect/",
+    code: "https://github.com/anstkostas/hover-swipe-effect",
     technologies: {
       HTML: "10%",
       CSS: "52%",
