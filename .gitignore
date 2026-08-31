@@ -1,1 +1,22 @@
 carouselold.js
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.apLocaleTracker
+.AppleDouble
+.AppleDB
+.AppleDesktop
+
+# Windows (harmless to keep)
+ehthumbs.db
+Thumbs.db
+
+# IDE specifics
+.vscode/
+.idea/
