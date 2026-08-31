@@ -28,5 +28,5 @@ const setMobileUi = function (e) {
   }
 };
 
-window.addEventListener("load", (e) => setMobileUi(e));
-window.addEventListener("resize", (e) => setMobileUi(e));
+window.addEventListener("load", setMobileUi);
+window.addEventListener("resize", setMobileUi);
